@@ -102,7 +102,7 @@ def main():
     show_mrtf2_coco(train_dataset)
 
     val_dataset = coco.CocoDataset(dataset_dir=base_dir,
-                                subset='train',
+                                subset='val',
                                 year=2017,
                                 auto_download=False,
                                 preprocess_transform=None,

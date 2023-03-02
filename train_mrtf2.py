@@ -40,7 +40,7 @@ def main():
     # tf_limit_gpu_memory(tf, 10000)
     # os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
-    tf_limit_gpu_memory(tf, 20000)
+    # tf_limit_gpu_memory(tf, 20000)
 
     from common.config import CONFIG
 

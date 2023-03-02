@@ -257,8 +257,6 @@ class CocoDataset(preprocess.SegmentationDataset):
             # All images
             image_ids = list(coco.imgs.keys())
 
-        # image_ids = image_ids[:100]
-
         # Add classes
         for i in class_ids:
             self.add_class("coco", i, coco.loadCats(i)[0]["name"])

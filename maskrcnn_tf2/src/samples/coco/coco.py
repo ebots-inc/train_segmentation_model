@@ -257,7 +257,7 @@ class CocoDataset(preprocess.SegmentationDataset):
             # All images
             image_ids = list(coco.imgs.keys())
 
-        # image_ids = image_ids[:100]
+        image_ids = image_ids[:100]
 
         # Add classes
         for i in class_ids:

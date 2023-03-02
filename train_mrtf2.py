@@ -102,7 +102,7 @@ def main():
                 train_dataset=train_dataset,
                 val_dataset=val_dataset,
                 config=CONFIG,
-                weights_path=None,
+                weights_path=args.weights_file_path,
                 strategy=strategy)
 
 if __name__=="__main__":

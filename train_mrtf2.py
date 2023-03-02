@@ -34,7 +34,6 @@ def main():
     parser = argparse.ArgumentParser("mask rcnn tf2 training")    
     parser.add_argument("--backbone_name", type=str)
     parser.add_argument("--weights_file_path", type=str, default=None)
-    parser.add_argument("--use_multi_gpus", type=bool, default=False)
     args = parser.parse_args()
     
     # Limit GPU memory for tensorflow container
@@ -50,17 +49,16 @@ def main():
 
     CONFIG['callback']['checkpoints_dir'] = os.getenv('MRTF2_SAVE_PATH', ",")
     ############# learning rate
-    CONFIG['optimizer_kwargs']['learning_rate'] = 3*1e-4
-    #
     CONFIG['callback']['histogram_freq'] = 500
     CONFIG['callback']['profile_batch'] = (500, 501)
 
-    # CONFIG['batch_size'] = 2
-    # CONFIG['images_per_gpu'] = 2
+
     # Init Mask-RCNN model
+    tf.compat.v1.reset_default_graph()
+    tf.keras.backend.clear_session()
     strategy = None
-    if args.use_multi_gpus:
-        num_gpus = CONFIG['gpu_num']
+    num_gpus = CONFIG['gpu_num']
+    if num_gpus>1:
         devices = tf.config.experimental.list_physical_devices('GPU')
         devices_names = [d.name.split('e:')[1] for d in devices]
         assert len(devices_names)>=num_gpus, f"Host machine has {len(devices_names)} GPUs. Provide gpu_num <= available GPUs."
@@ -74,40 +72,28 @@ def main():
             model = mask_rcnn_functional(config=CONFIG)
     else:
         model = mask_rcnn_functional(config=CONFIG)
-        # if args.weights_file_path is not None:
-        #     model.load_weights(args.weights_file_path)
 
-    # You can also download dataset with auto_download=True argument
-    # It will be downloaded and unzipped in dataset_dir
-    # base_dir = r'<COCO_PATH>/coco2017'
-    # base_dir = '/hdd/John/datasets/coco'
-    base_dir = '/home/wjohn/work/labeling/sama/deliveries/211130_132447/coco'
-    train_dir = os.path.join(base_dir, 'train')
-    val_dir = os.path.join(base_dir, 'val')
+    base_dataset_dir = CONFIG["base_dataset_dir"]
 
-    dataset_config = copy.deepcopy(CONFIG)
-    # dataset_config['batch_size'] = 8
-    # dataset_config['images_per_gpu'] = 8
-    print("Gpu batch size", CONFIG["batch_size"], dataset_config['batch_size'])
-    train_dataset = coco.CocoDataset(dataset_dir=base_dir,
+    train_dataset = coco.CocoDataset(dataset_dir=base_dataset_dir,
                                      subset='train',
                                      year=2017,
                                      auto_download=False,
                                      preprocess_transform=None,
                                     #  augmentation=aug.get_training_augmentation(),
                                      class_ids=[1, 2, 3],
-                                     **dataset_config
+                                     **CONFIG
                                      )
 
     show_mrtf2_coco(train_dataset)
 
-    val_dataset = coco.CocoDataset(dataset_dir=base_dir,
+    val_dataset = coco.CocoDataset(dataset_dir=base_dataset_dir,
                                 subset='val',
                                 year=2017,
                                 auto_download=False,
                                 preprocess_transform=None,
                                 class_ids=[1, 2, 3],
-                                **dataset_config
+                                **CONFIG
                                 )
 
     print("length of train, val dataset: ",len(train_dataset), len(val_dataset))

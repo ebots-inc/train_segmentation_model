@@ -245,7 +245,7 @@ def build_rpn_targets(anchors, gt_class_ids, gt_boxes, rpn_train_anchors_per_ima
     # A crowd box in COCO is a bounding box around several instances. Exclude
     # them from training. A crowd box is given a negative class ID.
     crowd_ix = np.where(gt_class_ids < 0)[0]
-    print("crowd_ix: ", crowd_ix.shape[0])
+    # print("crowd_ix: ", crowd_ix.shape[0])
     if crowd_ix.shape[0] > 0:
         # Filter out crowds from ground truth class IDs and boxes
         non_crowd_ix = np.where(gt_class_ids > 0)[0]
@@ -293,8 +293,6 @@ def build_rpn_targets(anchors, gt_class_ids, gt_boxes, rpn_train_anchors_per_ima
     # Reset the extra ones to neutral
     # choose ids based on argmax
     for (start_idx, end_idx) in cable_instances_start_end_indices:
-        import pdb
-        # pdb.set_trace()
         # Always choose first and last indices for training.
         ids = np.where(np.logical_and(rpn_match>0, np.logical_and(anchor_iou_argmax>=start_idx+1, anchor_iou_argmax<end_idx-1)))[0]
         # Remove 4 out of 5 cable anchor GT instances.
@@ -497,8 +495,6 @@ def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square
     padding: Padding added to the image [(top, bottom), (left, right), (0, 0)]
     """
     # Keep track of image dtype and return results in the same dtype
-    # import pdb
-    # pdb.set_trace()
     image_dtype = image.dtype
     # Default window (y1, x1, y2, x2) and default scale == 1.
     h, w = image.shape[:2]
@@ -919,9 +915,6 @@ def parse_image_meta_graph(meta):
 
     Returns a dict of the parsed tensors.
     """
-    # import pdb
-    # pdb.set_trace()
-    # print(meta.shape)
     image_id = meta[:, 0]
     original_image_shape = meta[:, 1:4]
     image_shape = meta[:, 4:7]
@@ -1005,7 +998,6 @@ def reformat_detections(detections, mrcnn_mask, original_image_shape, image_shap
     """
     # How many detections do we have?
     # Detections array is padded with zeros. Find the first class_id <= 0 (-1 for TensorRT)
-    # pdb.set_trace()
     zero_ix = np.where(detections[:, 4] <= 0)[0]
     N = zero_ix[0] if zero_ix.shape[0] > 0 else detections.shape[0]
 
@@ -1099,9 +1091,14 @@ def tf_limit_gpu_memory(tf_library, mem_limit):
     GPUS = tf_library.config.experimental.list_physical_devices('GPU')
     if GPUS:
         try:
-            tf_library.config.experimental.set_virtual_device_configuration(
-                GPUS[0],
-                [tf_library.config.experimental.VirtualDeviceConfiguration(memory_limit=mem_limit)])
+            tf.config.experimental.set_memory_growth(GPUS[0], True)
+            tf.config.experimental.set_memory_growth(GPUS[1], True)
+            # tf_library.config.experimental.set_virtual_device_configuration(
+            #     GPUS[0],
+            #     [tf_library.config.experimental.VirtualDeviceConfiguration(memory_limit=mem_limit)])
+            # tf_library.config.experimental.set_virtual_device_configuration(
+            #     GPUS[1],
+            #     [tf_library.config.experimental.VirtualDeviceConfiguration(memory_limit=mem_limit)])
             logical_gpus = tf_library.config.experimental.list_logical_devices('GPU')
             print(len(GPUS), "Physical GPUs,", len(logical_gpus), "Logical GPUs", 'Memory limit:', mem_limit)
         except RuntimeError as e:

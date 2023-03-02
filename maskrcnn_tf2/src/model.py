@@ -199,14 +199,14 @@ class MaskRCNN(tf.keras.Model):
         rpn_class_logits, rpn_class, rpn_bbox, mrcnn_class_logits, mrcnn_probs, mrcnn_bbox, mrcnn_mask, \
         rpn_rois, active_class_ids, output_rois, target_class_ids, target_mask, target_bbox = outputs
 
-        rpn_class_loss_val = self.losses_dict['rpn_class_loss'].call(rpn_match=batch_rpn_match,
+        rpn_class_loss_val, rpn_fg_loss_val, rpn_bg_loss_val, rpn_fg_num, rpn_bg_num = self.losses_dict['rpn_class_loss'].call(rpn_match=batch_rpn_match,
                                                                      rpn_class_logits=rpn_class_logits)
 
         rpn_bbox_loss_val = self.losses_dict['rpn_bbox_loss'].call(target_bbox=batch_rpn_bbox,
                                                                    rpn_match=batch_rpn_match,
                                                                    rpn_bbox=rpn_bbox)
 
-        mrcnn_class_loss_val = self.losses_dict['mrcnn_class_loss'].call(target_class_ids=target_class_ids,
+        mrcnn_class_loss_val, per_class_loss_dict = self.losses_dict['mrcnn_class_loss'].call(target_class_ids=target_class_ids,
                                                                          pred_class_logits=mrcnn_class_logits,
                                                                          active_class_ids=active_class_ids)
 
@@ -223,7 +223,8 @@ class MaskRCNN(tf.keras.Model):
                                      mrcnn_bbox_loss_val, mrcnn_mask_loss_val, None)
 
         self.update_loss_tracker(rpn_class_loss_val, rpn_bbox_loss_val, mrcnn_class_loss_val,
-                                 mrcnn_bbox_loss_val, mrcnn_mask_loss_val, None, loss)
+                                 mrcnn_bbox_loss_val, mrcnn_mask_loss_val, None, loss, rpn_fg_loss_val, rpn_bg_loss_val, rpn_fg_num, rpn_bg_num, per_class_loss_dict)
+
 
         return {m.name: m.result() for m in self.metrics}
 
@@ -369,8 +370,6 @@ class SMaskRCNN(MaskRCNN):
                    for o, n in zip(outputs, output_names)]
         rpn_class_logits, rpn_class, rpn_bbox = outputs
 
-        # self.anchors = tf.repeat(self.anchors, 4, 0)
-        # print("YYYYYYYYYYYYYYYY", self.anchors.shape)
         rpn_rois = self.proposal_layer([rpn_class, rpn_bbox, self.anchors])
 
         if self.training:
@@ -418,8 +417,8 @@ def mask_rcnn_functional(config: dict) -> tf.keras.Model:
     """
     # Prevent creating keras names with index increment.
     # It is important for weights setting from training to inference graph
-    tf.compat.v1.reset_default_graph()
-    tf.keras.backend.clear_session()
+    # tf.compat.v1.reset_default_graph()
+    # tf.keras.backend.clear_session()
 
     # Inputs
     input_image = tfl.Input(shape=config['image_shape'], name="input_image")

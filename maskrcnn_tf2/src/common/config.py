@@ -16,7 +16,7 @@ CONFIG = {
     #              4 coordinates of window+,
     #              scale number+,
     #              number of classes
-
+    'base_dataset_dir': "/home/wjohn/work/labeling/sama/deliveries/211130_132447/coco",
     'image_shape': (512, 512, 3),
     'img_size': 512,
     'backbone': 'efficientnetb4',
@@ -43,8 +43,8 @@ CONFIG = {
     'mask_shape': (28, 28),
 
     'epochs': 100,
-    'gpu_num': 1,
-    'batch_size': 4,
+    'gpu_num': 2,
+    'batch_size': 8,
     'images_per_gpu': 4,
     'training': True,
     'log_per_steps': 5,
@@ -144,7 +144,7 @@ CONFIG = {
 
     # Optimizer config
     'optimizer_kwargs': {
-        'learning_rate': 0.001,
+        'learning_rate': 3*1e-4,
         # 'clipnorm': 5.0,
         'clipvalue': 5.0,
         'name': 'adamax',

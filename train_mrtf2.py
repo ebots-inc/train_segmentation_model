@@ -47,7 +47,6 @@ def main():
     CONFIG['backbone'] = args.backbone_name
     CONFIG.update(eb_coco.EB_COCO_CONFIG)
 
-    CONFIG['callback']['checkpoints_dir'] = os.getenv('MRTF2_SAVE_PATH', ",")
     ############# learning rate
     CONFIG['callback']['histogram_freq'] = 500
     CONFIG['callback']['profile_batch'] = (500, 501)

@@ -103,11 +103,11 @@ def train_model(model, train_dataset, val_dataset, config, weights_path=None, lo
 
     # Load weights for MaskRCNN created previously during training.
     bbone = config['backbone']
+    
+    out_root_path = os.path.join(os.getcwd(), 'logs')
     tboard_model_folder = f"maskrcnn_{bbone}_" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    out_root_path = config['callback']['checkpoints_dir']
-    if out_root_path is None:
-        out_root_path = '..' 
-    tensorboard_logdir = os.path.join(out_root_path, tboard_model_folder, 'logs', 'scalars')
+
+    tensorboard_logdir = os.path.join(out_root_path, tboard_model_folder, 'scalars')
     initial_epoch = 0
     if weights_path:
         model.load_weights(weights_path)
@@ -119,7 +119,7 @@ def train_model(model, train_dataset, val_dataset, config, weights_path=None, lo
 
     # Prepare training callbacks list
     model_md5_config = hashlib.md5(config.__repr__().encode()).hexdigest()
-    checkpoint_path = os.path.join(config['callback']['checkpoints_dir'], tboard_model_folder, 'checkpoints',
+    checkpoint_path = os.path.join(out_root_path, tboard_model_folder, 'checkpoints',
                                    'maskrcnn_' + config['backbone'] + f'_{model_md5_config}' + '_cp-{epoch:04d}.ckpt')
     callbacks_list = [
         tf.keras.callbacks.ModelCheckpoint(

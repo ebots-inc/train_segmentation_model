@@ -50,7 +50,6 @@ def extract_bboxes(mask):
         boxes[i] = np.array([y1, x1, y2, x2])
     return boxes.astype(np.int32)
 
-import pdb
 def generate_anchors(scales, ratios, shape, feature_stride, anchor_stride):
     """
     scales: 1D array of anchor sizes in pixels. Example: [32, 64, 128]
@@ -101,9 +100,8 @@ def generate_anchors_from_xy_scales(x_scales, y_scales, shape, feature_stride, a
         value is 2 then generate anchors for every other feature map pixel.
     """
     # Get all combinations of scales and ratios
-    x_scales, y_scales = np.meshgrid(np.array(x_scales), np.array(y_scales))
-    x_scales = x_scales.flatten()
-    y_scales = y_scales.flatten()
+    x_scales = np.array(x_scales)
+    y_scales = np.array(y_scales)
 
     # Enumerate heights and widths from scales and ratios
     heights = y_scales
@@ -152,7 +150,7 @@ def generate_pyramid_anchors(scales, ratios, feature_shapes, feature_strides, an
     
     all_anchors = np.concatenate(anchors, axis=0)
 
-    np.savetxt("anchors_python.txt",all_anchors/512, delimiter='\n')
+    # np.savetxt("anchors_python.txt",all_anchors/512, delimiter='\n')
     return all_anchors
 
 def generate_pyramid_anchors_from_xy_scales(scales_x, scales_y, feature_shapes, feature_strides, anchor_stride, verbose=False):
@@ -168,17 +166,17 @@ def generate_pyramid_anchors_from_xy_scales(scales_x, scales_y, feature_shapes, 
     # Anchors
     # [anchor_count, (y1, x1, y2, x2)]
     anchors = []
-    for i in range(len(scales_x)):
+    for i in range(len(feature_strides)):
         a = generate_anchors_from_xy_scales(scales_x[i], scales_y[i], feature_shapes[i], feature_strides[i], anchor_stride)
         anchors.append(a)
         print("scale_x {}, scale_y {}, feature_shapes {}, feature_strides {}, anchor_stride {}".format(scales_x[i], scales_y[i],  feature_shapes[i], feature_strides[i], anchor_stride))
         print("Anchor shapes ", a.shape)
         if verbose:
-            print(f'Generated anchors. scales: {scales}, anchors: {a}.')
+            print(f'Generated anchors. scales: {scales_x[i]}, anchors: {a}.')
     
     all_anchors = np.concatenate(anchors, axis=0)
     print("shape of anchors: ", all_anchors.shape)
-    np.savetxt("anchors_python.txt",all_anchors, delimiter='\n')
+    # np.savetxt("anchors_python.txt",all_anchors, delimiter='\n')
     return all_anchors
 
 
@@ -977,7 +975,6 @@ def clip_boxes_graph(boxes, window):
     clipped.set_shape((clipped.shape[0], 4))
     return clipped
 
-import pdb
 def reformat_detections(detections, mrcnn_mask, original_image_shape, image_shape, window, mask_score_threshold=0.5):
     """Reformats the detections of one image from the format of the neural
     network output to a format suitable for use in the rest of the
@@ -1091,11 +1088,11 @@ def tf_limit_gpu_memory(tf_library, mem_limit):
     GPUS = tf_library.config.experimental.list_physical_devices('GPU')
     if GPUS:
         try:
-            tf.config.experimental.set_memory_growth(GPUS[0], True)
-            tf.config.experimental.set_memory_growth(GPUS[1], True)
-            # tf_library.config.experimental.set_virtual_device_configuration(
-            #     GPUS[0],
-            #     [tf_library.config.experimental.VirtualDeviceConfiguration(memory_limit=mem_limit)])
+            # tf.config.experimental.set_memory_growth(GPUS[0], True)
+            # tf.config.experimental.set_memory_growth(GPUS[1], True)
+            tf_library.config.experimental.set_virtual_device_configuration(
+                GPUS[0],
+                [tf_library.config.experimental.VirtualDeviceConfiguration(memory_limit=mem_limit)])
             # tf_library.config.experimental.set_virtual_device_configuration(
             #     GPUS[1],
             #     [tf_library.config.experimental.VirtualDeviceConfiguration(memory_limit=mem_limit)])

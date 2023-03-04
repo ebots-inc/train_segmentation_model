@@ -246,7 +246,7 @@ class ProposalLayer(tfl.Layer):
         deltas = deltas * np.reshape(self.config['rpn_bbox_std_dev'], [1, 1, 4])
         # Anchors
         anchors = inputs[2]
-
+        print(f"Scores shape {scores.shape}, anchors shape {anchors.shape}")
         # Improve performance by trimming to top anchors by score
         # and doing the rest on the smaller subset.
 
@@ -472,11 +472,11 @@ class DetectionLayer(tfl.Layer):
             return class_keep
 
         # 2. Map over class IDs
-        # nms_keep = tf.map_fn(nms_keep_map, unique_pre_nms_class_ids, dtype=tf.int64)
-        nms_keep = _nms_keep_func(unique_pre_nms_class_ids)
+        nms_keep = tf.map_fn(nms_keep_map, unique_pre_nms_class_ids, dtype=tf.int64)
+        # nms_keep = _nms_keep_func(unique_pre_nms_class_ids)
 
         # 3. Merge results into one list, and remove -1 padding
-        # nms_keep = tf.reshape(nms_keep, [-1])
+        nms_keep = tf.reshape(nms_keep, [-1])
         nms_keep = tf.gather(nms_keep, tf.where(nms_keep > -1)[:, 0])
         # 4. Compute intersection between keep and nms_keep
 
@@ -1112,7 +1112,7 @@ def rpn_graph(inputs, anchors_per_location, anchor_stride, training):
     return rpn_class_logits, rpn_probs, rpn_bbox
 
 
-def build_rpn_model(anchor_stride, anchors_per_location, depth, training, frozen):
+def build_rpn_model(anchor_stride, anchors_per_location, depth, training, frozen, idx):
     """Builds a Keras model of the Region Proposal Network.
     It wraps the RPN graph so it can be used multiple times with shared
     weights.
@@ -1133,7 +1133,7 @@ def build_rpn_model(anchor_stride, anchors_per_location, depth, training, frozen
     """
     input_feature_map = tfl.Input(shape=[None, None, depth], name="input_rpn_feature_map")
     outputs = rpn_graph(input_feature_map, anchors_per_location, anchor_stride, training)
-    rpn_model = tf.keras.Model(inputs=[input_feature_map], outputs=outputs, name="rpn_model")
+    rpn_model = tf.keras.Model(inputs=[input_feature_map], outputs=outputs, name="rpn_model_"+str(idx))
     if frozen:
         print('[MaskRCNN] Frozen region proposal model')
         rpn_model.trainable = False
@@ -1406,9 +1406,9 @@ class MaskRCNNBackbone:
 
         model = self._get_notop_model()
 
-        block_layers = [x for x in model.layers if 'block' in x.name]
-        for layer_name in block_layers:
-            print("block layers: ",layer_name.name, layer_name.output_shape)
+        # block_layers = [x for x in model.layers if 'block' in x.name]
+        # for layer_name in block_layers:
+        #     print("block layers: ",layer_name.name, layer_name.output_shape)
 
         if not self.config['train_bn_backbone']:
             bn_layers = [x.name for x in model.layers if 'bn' in x.name]

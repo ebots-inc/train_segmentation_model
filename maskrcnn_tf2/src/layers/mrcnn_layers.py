@@ -246,7 +246,7 @@ class ProposalLayer(tfl.Layer):
         deltas = deltas * np.reshape(self.config['rpn_bbox_std_dev'], [1, 1, 4])
         # Anchors
         anchors = inputs[2]
-        print(f"Scores shape {scores.shape}, anchors shape {anchors.shape}")
+        # print(f"Scores shape {scores.shape}, anchors shape {anchors.shape}")
         # Improve performance by trimming to top anchors by score
         # and doing the rest on the smaller subset.
 

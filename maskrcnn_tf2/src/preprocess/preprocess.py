@@ -445,7 +445,7 @@ class DataLoader(Sequence):
         gen_batch = 0
         index = index*self.batch_size
         while gen_batch < self.batch_size:
-            print("batch index: ", index)
+            # print("batch index: ", index)
             image, gt_masks, gt_class_ids, gt_boxes, cable_instances_start_end_indices, image_meta, \
             original_image, original_masks_array, original_class_ids, original_bboxes = self.dataset[index]
 

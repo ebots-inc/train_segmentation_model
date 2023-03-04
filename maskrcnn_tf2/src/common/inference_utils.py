@@ -118,23 +118,28 @@ def set_rpn_weights(training_model, inference_model, verbose=False):
     Returns: inference_model
 
     """
-    training_rpn = training_model.get_layer('rpn_model')
 
-    for layer in training_rpn.layers:
+    training_rpn_branches = [training_model.get_layer(x.name) for x in training_model.layers if 'rpn_model' in x.name]
+    # import pdb
+    # pdb.set_trace()
+    for training_rpn in training_rpn_branches:
+        print("rpn layer name", training_rpn.name)
+        block_name = training_rpn.name
+        for layer in training_rpn.layers:
 
-        layer_name = layer.name
-        if 'input' in layer_name:
-            continue
-        # Get weights from training graph
-        layer_weights = layer.get_weights()
-        if len(layer_weights) == 0:
-            print('Skipped zero-weights layer: ', layer_name)
-            continue
-        # Set weights in inference graph
-        inference_model.get_layer('rpn_model').get_layer(layer_name).set_weights(layer_weights)
+            layer_name = layer.name
+            if 'input' in layer_name:
+                continue
+            # Get weights from training graph
+            layer_weights = layer.get_weights()
+            if len(layer_weights) == 0:
+                print('Skipped zero-weights layer: ', layer_name)
+                continue
+            # Set weights in inference graph
+            inference_model.get_layer(block_name).get_layer(layer_name).set_weights(layer_weights)
 
-        if verbose:
-            print(f'Set weights: {layer_name}')
+            if verbose:
+                print(f'Set weights: {layer_name}')
 
     return inference_model
 

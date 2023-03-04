@@ -43,9 +43,9 @@ CONFIG = {
     'mask_shape': (28, 28),
 
     'epochs': 100,
-    'gpu_num': 2,
+    'gpu_num': 1,
     'batch_size': 8,
-    'images_per_gpu': 4,
+    'images_per_gpu': 8,
     'training': True,
     'log_per_steps': 5,
     'use_multiprocessing': True,
@@ -67,18 +67,23 @@ CONFIG = {
         'profile_batch': '1,2',
     },
 
-    'backbone_strides': [4, 4, 4, 4, 8, 8, 8, 8, 8, 8, 8, 8],
+    'unique_backbone_strides': [4, 8],
+    
+    'backbone_strides': [4, 8],
+    
 
     'top_down_pyramid_size': 256,
 
     # Length of square anchor side in pixels
-    'rpn_anchor_scales_x': (15, 25, 24, 32, 30, 52, 40, 40, 52, 50, 42, 64),
-    'rpn_anchor_scales_y': (25, 15, 24, 32, 52, 30, 40, 52, 40, 50, 64, 42),
+    # 'rpn_anchor_scales': (0.5, 1, 2),
+    'backbone_strides': [4, 8],
+    'rpn_anchor_scales_x': [[15, 25, 24, 32], [30, 52, 40, 40, 52, 50, 42, 64]],
+    'rpn_anchor_scales_y': [[25, 15, 24, 32], [52, 30, 40, 52, 40, 50, 64, 42]],
 
 
     # Ratios of anchors at each cell (width/height)
     # A value of 1 represents a square anchor, and 0.5 is a wide anchor
-    'rpn_anchor_ratios': [0.5, 1, 2],
+    # 'rpn_anchor_ratios': [0.5, 1, 2],
 
     # Anchor stride
     # If 1 then anchors are created for each cell in the backbone feature map.
@@ -86,7 +91,7 @@ CONFIG = {
     'rpn_anchor_stride': 1,
 
     'rpn_train_anchors_per_image': 256,
-    'max_gt_instances': 100,
+    'max_gt_instances': 300,
 
     # Bounding box refinement standard deviation for RPN and final detections.
     'rpn_bbox_std_dev': np.array([0.1, 0.1, 0.2, 0.2], dtype='float32'),
@@ -109,9 +114,9 @@ CONFIG = {
     # ROIs below this threshold are skipped
     'detection_min_confidence': 0.7,
     # Non-maximum suppression threshold for detection
-    'detection_nms_threshold': 0.3,
+    'detection_nms_threshold': 0.7,
     # Max number of final detections
-    'detection_max_instances': 100,
+    'detection_max_instances': 200,
 
     # ROIs kept after tf.nn.top_k and before non-maximum suppression
     'pre_nms_limit': 1024,  # 1024,  # 6000
@@ -144,7 +149,7 @@ CONFIG = {
 
     # Optimizer config
     'optimizer_kwargs': {
-        'learning_rate': 3*1e-4,
+        'learning_rate': 6*1e-4,
         # 'clipnorm': 5.0,
         'clipvalue': 5.0,
         'name': 'adamax',

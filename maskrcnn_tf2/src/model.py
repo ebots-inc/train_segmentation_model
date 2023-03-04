@@ -149,7 +149,6 @@ class MaskRCNN(tf.keras.Model):
 
         batch_images, batch_images_meta, batch_rpn_match, batch_rpn_bbox, \
         batch_gt_class_ids, batch_gt_boxes, batch_gt_masks, random_rois = self.get_input(inputs)
-
         with tf.GradientTape() as tape:
             outputs = self(inputs)
             rpn_class_logits, rpn_class, rpn_bbox, mrcnn_class_logits, mrcnn_probs, mrcnn_bbox, mrcnn_mask, \
@@ -467,17 +466,23 @@ def mask_rcnn_functional(config: dict) -> tf.keras.Model:
     rpn_feature_maps, mrcnn_feature_maps = mrcnnl.upsampling_graph(inputs=[c2, c3, c4, c5], config=config)
 
     # RPN Model
-    rpn_model = mrcnnl.build_rpn_model(anchor_stride=config['rpn_anchor_stride'],
-                                       anchors_per_location=len(config['rpn_anchor_ratios']),
-                                       depth=config['top_down_pyramid_size'],
-                                       training=config['training'],
-                                       frozen=config['frozen_rpn_model']
-                                       )
+    # Should we have same or different rpn model?
+    backbone_strides = config['backbone_strides']
+    layer_outputs = []
+    for backbone_stride_idx in range(len(backbone_strides)):
+        rpn_model = mrcnnl.build_rpn_model(anchor_stride=config['rpn_anchor_stride'],
+                                        anchors_per_location=len(config['rpn_anchor_scales_x'][backbone_stride_idx]),
+                                        depth=config['top_down_pyramid_size'],
+                                        training=config['training'],
+                                        frozen=config['frozen_rpn_model'],
+                                        idx = backbone_stride_idx
+                                        )
+        layer_outputs.append(rpn_model([rpn_feature_maps[backbone_stride_idx]]))
 
     # Loop through pyramid layers
-    layer_outputs = []
-    for p in rpn_feature_maps:
-        layer_outputs.append(rpn_model([p]))
+    
+    # for p in rpn_feature_maps:
+    #     layer_outputs.append(rpn_model([p]))
 
     # Concatenate layer outputs
     # Convert from list of lists of level outputs to list of lists

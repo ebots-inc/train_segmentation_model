@@ -266,6 +266,9 @@ class SegmentationDataset:
         # For example if you have more instances of cables in a scene you should allow more +ve anchor samples.
         # Also, sampling equally from each instance
         # Sampling ends in each case to be precise.
+
+        # To address the intersections of cables.
+        cable_segmentation_mask = np.logical_or.reduce(proc_masks[:,:,proc_class_ids==3], axis=-1)
         smaller_bboxes = []
         smaller_masks = []
         smaller_classes = []
@@ -300,7 +303,7 @@ class SegmentationDataset:
                             continue
                         mid_x = int((mask_indices[0]+mask_indices[-1])/2)
                         box = [max(mid_y-16, 0), max(0, mid_x-16), min(511, mid_y+15), min(511, mid_x+15)]
-                        mask[box[0]:box[2]+1, box[1]:box[3]+1] = proc_masks[box[0]:box[2]+1, box[1]:box[3]+1, instance_id]
+                        mask[box[0]:box[2]+1, box[1]:box[3]+1] = cable_segmentation_mask[box[0]:box[2]+1, box[1]:box[3]+1]
                         smaller_bboxes.append(box)
                         smaller_masks.append(mask)
                         smaller_classes.append(3)
@@ -331,7 +334,7 @@ class SegmentationDataset:
                             continue
                         mid_y = int((mask_indices[0]+mask_indices[-1])/2)
                         box = [max(mid_y-16, 0), max(0, mid_x-16), min(511, mid_y+15), min(511, mid_x+15)]
-                        mask[box[0]:box[2]+1, box[1]:box[3]+1] = proc_masks[box[0]:box[2]+1, box[1]:box[3]+1, instance_id]
+                        mask[box[0]:box[2]+1, box[1]:box[3]+1] = cable_segmentation_mask[box[0]:box[2]+1, box[1]:box[3]+1]
                         smaller_bboxes.append(box)
                         smaller_masks.append(mask)
                         smaller_classes.append(3)
@@ -442,7 +445,7 @@ class DataLoader(Sequence):
         gen_batch = 0
         index = index*self.batch_size
         while gen_batch < self.batch_size:
-
+            print("batch index: ", index)
             image, gt_masks, gt_class_ids, gt_boxes, cable_instances_start_end_indices, image_meta, \
             original_image, original_masks_array, original_class_ids, original_bboxes = self.dataset[index]
 
@@ -541,7 +544,7 @@ class DataLoader(Sequence):
                 if self.return_overlaps:
                     batch_overlaps = []
 
-                    # If more instances than fits in the array, sub-sample from them.
+            # If more instances than fits in the array, sub-sample from them.
             if gt_boxes.shape[0] > self.kwargs['max_gt_instances']:
                 ids = np.random.choice(
                     np.arange(gt_boxes.shape[0]), self.kwargs['max_gt_instances'], replace=False)
